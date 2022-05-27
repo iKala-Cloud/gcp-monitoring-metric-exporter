@@ -43,7 +43,7 @@ def get_request_body(project_id, metric_filter, interval, page_size, full_view=T
     aggregation = monitoring_v3.Aggregation(
         {
             "alignment_period": {"seconds": 3600},
-            "per_series_aligner": monitoring_v3.Aggregation.Aligner.ALIGN_MEAN,
+            "per_series_aligner": monitoring_v3.Aggregation.Aligner.ALIGN_MEAN
         }
     )
 
