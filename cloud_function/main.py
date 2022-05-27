@@ -39,12 +39,19 @@ def get_request_body(project_id, metric_filter, interval, page_size, full_view=T
         view = monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.FULL
     else:
         view = monitoring_v3.ListTimeSeriesRequest.TimeSeriesView.HEADERS
+    
+    aggregation = monitoring_v3.Aggregation(
+        {
+            "alignment_period": {"seconds": 3600},
+            "per_series_aligner": monitoring_v3.Aggregation.Aligner.ALIGN_MEAN,
+        }
+    )
 
     request = {
         "name": project_name,
         "filter": metric_filter,
         "interval": interval,
-        "aggregation": None,
+        "aggregation": aggregation,
         "view": view,
         "page_size": page_size,
     }
@@ -72,6 +79,8 @@ def parse_as_json_new_line(data):
 
         metric_name = page.metric
         resource_name = page.resource
+        metric_kind = page.metric_kind
+        value_type = page.value_type
 
         for point in page.points:
 
@@ -79,17 +88,29 @@ def parse_as_json_new_line(data):
                 'time': point.interval.start_time.strftime('%d/%m/%Y %H:%M:%S'),
                 'metric_type': metric_name.type,
                 'resource_type': resource_name.type,
+                'metric_kind': metric_kind,
+                'value_type': value_type,
                 'int_value': point.value.int64_value,
                 'double_value': point.value.double_value,
                 'string_value': point.value.string_value,
                 'bool_value': point.value.bool_value
             }
+            
+            #for key, value in metric_name.labels.items():
+            #    dict_point[key] = value
 
+            #for key, value in resource_name.labels.items():
+            #    dict_point[key] = value
+
+            metric_labels = {}
             for key, value in metric_name.labels.items():
-                dict_point[key] = value
+                metric_labels[key] = value
+            dict_point["metric_labels"] = json.dumps(metric_labels)
 
+            resource_labels = {}
             for key, value in resource_name.labels.items():
-                dict_point[key] = value
+                resource_labels[key] = value
+            dict_point["resource_labels"] = json.dumps(resource_labels) 
 
             points.append(dict_point)
 
@@ -104,7 +125,7 @@ def load_to_bq(project_id, dataset, table_name, gcs_path):
     table_id = f"{project_id}.{dataset}.{table_name}"
 
     job_config = bigquery.LoadJobConfig(
-        source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON, autodetect=True,
+        source_format=bigquery.SourceFormat.NEWLINE_DELIMITED_JSON, autodetect=True,schema_update_options=[bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
     )
 
     job = bq_client.load_table_from_uri(f'{gcs_path}', table_id, job_config=job_config)
