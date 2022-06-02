@@ -1,4 +1,4 @@
-###Cloud Scheduler Message-Body
+### Cloud Scheduler Message-Body
 
 Example:
 
@@ -11,7 +11,7 @@ Example:
 "filters":"storage.googleapis.com/storage/object_count,storage.googleapis.com/storage/total_byte_seconds,storage.googleapis.com/storage/total_bytes"
 }
 ```
-###Cloud Build Trigger Substitutions
+### Cloud Build Trigger Substitutions
 
 Example:
 
@@ -23,7 +23,7 @@ _BQ_TABLE: $(body.message.data.table)
 _METRIC_FILTERS: $(body.message.data.filters)
 ```
 
-###Cloud Build YAML Substitutions
+### Cloud Build YAML Substitutions
 
 Var |Type |Example |Description
 :---|:---|:---|:---
